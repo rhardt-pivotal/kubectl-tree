@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
@@ -67,16 +66,21 @@ func queryAPI(client dynamic.Interface, api apiResource, allNs bool) ([]unstruct
 		} else {
 			intf = nintf
 		}
+		klog.V(4).Infof("Got intf: %w", intf)
 		resp, err := intf.List(metav1.ListOptions{
 			Limit:    250,
 			Continue: next,
 		})
 		if err != nil {
-			return nil, fmt.Errorf("listing resources failed (%s): %w", api.GroupVersionResource(), err)
+			klog.V(4).Infof("listing resources failed (%s): %w", api.GroupVersionResource(), err)
+			// return nil, fmt.Errorf("listing resources failed (%s): %w", api.GroupVersionResource(), err)
+		} else{
+			out = append(out, resp.Items...)
+			next = resp.GetContinue()
 		}
-		out = append(out, resp.Items...)
 
-		next = resp.GetContinue()
+
+
 		if next == "" {
 			break
 		}
